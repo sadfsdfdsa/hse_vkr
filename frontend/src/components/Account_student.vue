@@ -34,6 +34,9 @@
                         {{student_date.begin.getHours()}}:{{student_date.begin.getMinutes()}}-{{student_date.end.getHours()}}:{{student_date.end.getMinutes()}}
                     </b-col>
                 </b-row>
+                <b-row>
+                    <b-button class="btn-sm" @click="remove()">Delete (test)</b-button>
+                </b-row>
             </div>
         </b-row>
     </div>
@@ -77,6 +80,27 @@
             student_date: null
         }),
         methods: {
+            remove() {
+                this.$api.post("/time/student", {
+                    date: {
+                        date: this.student_date.date.getTime(),
+                        begin: this.student_date.begin.getTime(),
+                        end: this.student_date.end.getTime(),
+                    },
+                    teacher: this.student_date.teacher,
+                    student: this.$store.state.username,
+                    action: 'delete'
+                }).then((data) => {
+                    if (data.data.result === 'success') {
+                        this.$snotify.success("success");
+                        this.student_date = null
+                    } else {
+                        this.$snotify.error("error")
+                    }
+                }).catch(e => {
+                    this.$snotify.error(`Error status ${e.response.status}`);
+                });
+            },
             add(item) {
                 this.$api.post("/time/student", {
                     date: {
