@@ -1,122 +1,131 @@
 from flask import Flask, jsonify, render_template, request
+from db import Database
 
 app = Flask(__name__,
             static_url_path='',
             static_folder='static',
             template_folder='static')
 
-
-class Period:
-    def __init__(self, date, begin, end, teacher, student=None):
-        self.date = int(date)
-        self.begin = int(begin)
-        self.end = int(end)
-        self.teacher = teacher
-        self.student = student
+db = Database("db.db")
+db.create_tables()
 
 
-dates = []
-users = [
-    {"login": "t_teacher", "password": "123", "role": 1},
-    {"login": "t_student", "password": "123", "role": 0}
-]
-
-
+# login return user or error
 @app.route('/api/v1/login', methods=["POST"])
 def login():
     data = request.json
-    for user in users:
-        if user['login'] == data['login'] and user['password'] == data['password']:
-            return jsonify(user)
+    if db.User.auth(data['login'], data['password']):
+        return jsonify(db.User.get(email=data['login']))
     return jsonify({"error": True, "code": "401"})
 
 
+# return all dates
 @app.route('/api/v1/time/', methods=["GET"])
 def all_time_get():
-    tmp = []
-    for item in dates:
-        tmp.append({'date': item.date, 'begin': item.begin, 'end': item.end, 'teacher': item.teacher})
+    tmp = db.Time.get(teacher_id=0)
     return jsonify(tmp)
 
 
+# return free dates
 @app.route('/api/v1/time/free', methods=["GET"])
 def free_time_get():
-    tmp = []
-    for item in dates:
-        if not item.student:
-            tmp.append({'date': item.date, 'begin': item.begin, 'end': item.end, 'teacher': item.teacher})
+    tmp = db.Time.get(student_id=0)
     return jsonify(tmp)
 
 
+# return teacher times
 @app.route('/api/v1/time/teacher', methods=["GET"])
 def teacher_time_get():
     teacher = request.args.get('teacher')
-    tmp_dates = []
-    for item in dates:
-        if item.teacher == teacher:
-            tmp_dates.append({'date': item.date, 'begin': item.begin, 'end': item.end, 'student': item.student})
-    return jsonify({"teacher": teacher, "dates": tmp_dates})
+    teacher_id = db.User.get(fio=request.args.get('teacher'))['id']
+    tmp = db.Time.get(teacher_id=teacher_id)
+    return jsonify({"teacher": teacher, "dates": tmp})
 
 
+# create/delete teacher times
 @app.route('/api/v1/time/teacher', methods=["POST"])
 def teacher_time_post():
+    teacher_id = db.User.get(fio=request.json['teacher'])['id']  # from fio
     if request.json['action'] == 'create':
-        date = request.json['date']
-        for item in dates:
-            if request.json['teacher'] == item.teacher and (int(
-                    date['date']) // 60 * 60 * 24 == item.date // 60 * 60 * 24 and \
-                                                            ((int(date['begin']) > item.begin and int(
-                                                                date['begin']) < item.end) or
-                                                             (int(date['end']) > item.begin and int(
-                                                                 date['end']) < item.end)
-                                                             or (int(date['begin']) == item.begin or int(
-                                                                        date['end']) == item.end)
-                                                            )):
-                return jsonify({"result": "error", "error": "Неверный период"})
-        dates.append(Period(request.json['date']['date'], request.json['date']['begin'], request.json['date']['end'],
-                            request.json['teacher']))
-        return jsonify({"result": "success"})
+        date = request.json['date']  # date, begin, end
+        if db.Time.create(date['begin'], date['end'], teacher_id):
+            return jsonify({"result": "success"})
+        return jsonify({"result": "error"})
     elif request.json['action'] == 'delete':
-        i = 0
-        for date in dates:
-            if date.date == request.json['date']['date'] and date.teacher == request.json['teacher']:
-                dates.pop(i)
-                return jsonify({"result": "success"})
-            i += 1
+        date = request.json['date']  # date, begin, end
+        if db.Time.delete(date['begin'], date['end'], teacher_id):
+            return jsonify({"result": "success"})
+    elif request.json['action'] == 'end':
+        student_id = db.User.get(fio=request.json['student'])['id']  # from fio
+        if db.Time.delete(teacher_id=teacher_id, student_id=student_id):
+            return jsonify({"result": "success"})
     return jsonify({"result": "error"})
 
 
+# set/unset student  time
 @app.route('/api/v1/time/student', methods=["POST"])
 def student_time_post():
     date = request.json['date']
-    student = request.json['student']
-    teacher = request.json['teacher']
+    student_id = db.User.get(fio=request.json['student'])['id']  # fio
+    teacher_id = db.User.get(fio=request.json['teacher'])['id']  # fio
     if request.json['action'] == 'create':
-        for item in dates:
-            if item.date == int(date['date']) and item.begin == int(
-                    date['begin']) and item.end == int(date['end']) and item.teacher == teacher and not item.student:
-                item.student = student
-                return jsonify({"result": "success"})
+        if db.Time.set(student_id, date['begin'], date['end'], teacher_id):
+            return jsonify({"result": "success"})
         return jsonify({"result": "error"})
     elif request.json['action'] == 'delete':
-        for item in dates:
-            if item.date == int(date['date']) and item.begin == int(
-                    date['begin']) and item.end == int(
-                date['end']) and item.teacher == teacher and item.student == student:
-                item.student = None
-                return jsonify({"result": "success"})
+        if db.Time.set(0, date['begin'], date['end'], teacher_id):
+            return jsonify({"result": "success"})
         return jsonify({"result": "error"})
     return jsonify({"result": "error"})
 
 
+# get student time
 @app.route('/api/v1/time/student', methods=["GET"])
 def student_time_get():
-    student = request.args.get('student')
-    for item in dates:
-        if item.student == student:
-            return jsonify({"result": "success",
-                            "date": {'date': item.date, 'begin': item.begin, 'end': item.end, 'teacher': item.teacher}})
+    student_id = db.User.get(fio=request.args.get('student'))['id']
+    if db.Time.get(student_id=student_id):
+        tmp = db.Time.get(student_id=student_id)
+        return jsonify({"result": "success",
+                        "date": tmp})
     return jsonify({"result": "error"})
+
+
+@app.route('/api/v1/check', methods=["GET"])  # get history by student fio
+def get_check():
+    student_fio = request.args.get('student')
+    student_id = db.User.get(fio=student_fio)['id']
+    return jsonify(db.Check.get(student_id=student_id))
+
+
+@app.route('/api/v1/check', methods=["POST"])  # append/delete error in history by student fio, error msg
+def post_check():
+    student_fio = request.json['student']
+    student_id = db.User.get(fio=student_fio)['id']
+    action = request.json['action']
+    tmp = request.json['data']
+    if action == 'add':
+        db.Check.create(student_id, tmp['error'], tmp['comment'])
+        return jsonify({"success": "true"})
+    elif action == 'remove':
+        db.Check.delete(student_id, tmp['error'])
+        return jsonify({"success": "true"})
+    return jsonify({"success": "false"})
+
+
+@app.route('/api/v1/student/passed', methods=['POST'])
+def set_passed():
+    student_fio = request.json['student']
+    student_id = db.User.get(fio=student_fio)['id']
+    if db.User.set(student_id, 1):
+        return jsonify({"success": "true"})
+    return jsonify({"success": "false"})
+
+
+@app.route('/api/v1/dev/unset_control', methods=['GET'])
+def dev_control_0():
+    db.cursor.execute("UPDATE users SET control = 0")
+    db.conn.commit()
+    return jsonify({"success": "true"})
 
 
 # frontend index page
@@ -132,4 +141,7 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(threaded=False)
+
+# https://hse-exams.herokuapp.com/
+# https://github.com/sadfsdfdsa/hse_vkr

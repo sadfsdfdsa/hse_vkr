@@ -28,7 +28,7 @@
                 <b-row>
                     <b-table ref="dates_table_teacher" striped hover :items="dates" :fields="fields">
                         <template v-slot:cell(date)="item">
-                            {{item.item.date.toString().split('00:00:00')[0]}}
+                            {{item.item.date.getDay()+'.'+item.item.date.getMonth()+'.'+item.item.date.getFullYear()}}
                         </template>
                         <template v-slot:cell(begin)="item">
                             {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
@@ -49,7 +49,7 @@
                 <b-row>
                     <b-table ref="dates_table_teacher" striped hover :items="check_dates" :fields="fields2">
                         <template v-slot:cell(date)="item">
-                            {{item.item.date.toString().split('00:00:00')[0]}}
+                            {{item.item.date.getDay()+'.'+item.item.date.getMonth()+'.'+item.item.date.getFullYear()}}
                         </template>
                         <template v-slot:cell(begin)="item">
                             {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
@@ -58,10 +58,10 @@
                             {{item.item.end.getHours()}}:{{item.item.end.getMinutes()}}
                         </template>
                         <template v-slot:cell(student)="item">
-                            {{item.item.student}}+ФИО
+                            {{item.item.student}}
                         </template>
                         <template v-slot:cell(check)="item">
-                            <b-button class="btn-sm" @click="check(item)">Проверка</b-button>
+                            <b-button class="btn-sm" @click="go_check(item)">Проверка</b-button>
                         </template>
                     </b-table>
                 </b-row>
@@ -186,6 +186,9 @@
                         this.$snotify.error(`Error status ${e.response.status}`);
                     });
 
+            },
+            go_check(item) {
+                this.$router.push({path: '/work/'+item.item.student});
             }
         },
         created: function () {

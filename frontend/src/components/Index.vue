@@ -36,7 +36,7 @@
                     this.$api.post("/login", {login: this.login, password: this.password})
                         .then((data) => {
                             if (!data.data.error) {
-                                this.$store.commit("set_user", {name: this.login, role: data.data.role});
+                                this.$store.commit("set_user", {name: data.data.fio, role: data.data.role, control: data.data.control});
                                 this.$router.push({path: '/account'});
                             } else {
                                 this.$snotify.error(data.data.error)

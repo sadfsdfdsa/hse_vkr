@@ -1,16 +1,29 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <div>
-        <b-row class="mt-5">
+        <div v-if="this.$store.state.user_control===0">
+            <b-row>
+                <b-col sm="4">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Upload</span>
+                        </div>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="inputGroupFile01">
+                            <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                        </div>
+                    </div>
+                </b-col>
+            </b-row>
             <div ref="student_table_show" v-if="!student_date">
                 <b-col sm="6">
                     <b-row>Свободное время преподавателей</b-row>
                     <b-row>
                         <b-table ref="dates_table_student" striped hover :items="free_dates" :fields="fields">
                             <template v-slot:cell(teacher)="item">
-                                {{item.item.teacher}} + ФИО
+                                {{item.item.teacher}}
                             </template>
                             <template v-slot:cell(date)="item">
-                                {{item.item.date.toString().split('00:00:00')[0]}}
+                                {{item.item.date.getDay()+'.'+item.item.date.getMonth()+'.'+item.item.date.getFullYear()}}
                             </template>
                             <template v-slot:cell(begin)="item">
                                 {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
@@ -29,7 +42,9 @@
                 <b-row>Ваш нормоконтроль:</b-row>
                 <b-row>{{student_date.teacher}}</b-row>
                 <b-row>
-                    <b-col>{{student_date.date.toString().split('00:00:00')[0]}}</b-col>
+                    <b-col>
+                        {{student_date.date.getDay()+'.'+student_date.date.getMonth()+'.'+student_date.date.getFullYear()}}
+                    </b-col>
                     <b-col>
                         {{student_date.begin.getHours()}}:{{student_date.begin.getMinutes()}}-{{student_date.end.getHours()}}:{{student_date.end.getMinutes()}}
                     </b-col>
@@ -38,7 +53,14 @@
                     <b-button class="btn-sm" @click="remove()">Delete (test)</b-button>
                 </b-row>
             </div>
-        </b-row>
+            <b-row>
+                <b-table ref="errors_table" striped hover :items="student_history" :fields="fields2">
+                </b-table>
+            </b-row>
+        </div>
+        <div v-else>
+            <b-row>Passed</b-row>
+        </div>
     </div>
 </template>
 
@@ -77,7 +99,19 @@
                 },
             ],
             free_dates: [],
-            student_date: null
+            student_date: null,
+            fields2: [
+                {
+                    key: 'error',
+                    label: 'Ошибка',
+                    variant: 'danger'
+                },
+                {
+                    key: 'comment',
+                    label: 'Комментарий',
+                },
+            ],
+            student_history: [],
         }),
         methods: {
             remove() {
@@ -100,6 +134,23 @@
                 }).catch(e => {
                     this.$snotify.error(`Error status ${e.response.status}`);
                 });
+                this.$api.get("/time/free")
+                    .then((data) => {
+                        if (!data.data.error) {
+                            data.data.forEach(function (item) {
+                                dates.push({
+                                    date: new Date(item.date),
+                                    begin: new Date(item.begin),
+                                    end: new Date(item.end),
+                                    teacher: item.teacher
+                                })
+                            });
+                            this.free_dates = dates;
+                        }
+                    })
+                    .catch(e => {
+                        this.$snotify.error(`Error status ${e.response.status}`);
+                    });
             },
             add(item) {
                 this.$api.post("/time/student", {
@@ -128,12 +179,24 @@
                     this.$snotify.error(`Error status ${e.response.status}`);
                 });
             },
+            get_history() {
+                this.$api.get("/check?student=" + this.$store.state.username)
+                    .then((data) => {
+                        if (data.data) {
+                            this.student_history = data.data;
+                        } else {
+                            this.$snotify.info("Не забудьте сделать запись!")
+                        }
+                    })
+                    .catch(e => {
+                        this.$snotify.error(`Error status ${e.response.status}`);
+                    });
+            }
         },
         beforeCreate() {
-            if (this.$store.state.username) {
+            if (this.$store.state.username && this.$store.state.user_control === 0) {
                 let dates = [];
                 let flag = false;
-
                 this.$api.get("/time/student?student=" + this.$store.state.username)
                     .then((data) => {
                         if (data.data.result === "success") {
@@ -144,6 +207,7 @@
                                 teacher: data.data.date.teacher
                             };
                             flag = true;
+
                         } else {
                             this.$snotify.info("Не забудьте сделать запись!")
                         }
@@ -170,6 +234,11 @@
                             this.$snotify.error(`Error status ${e.response.status}`);
                         });
                 }
+            }
+        },
+        created() {
+            if (this.$store.state.user_control === 0) {
+                this.get_history();
             }
         }
     }

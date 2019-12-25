@@ -33,6 +33,7 @@ const store = new Vuex.Store({
         set_user(state, user) {
             state.username = user.name;
             state.user_role = user.role;
+            state.user_control = user.control;
         }
     }
 });
