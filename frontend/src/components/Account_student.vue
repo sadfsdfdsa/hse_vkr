@@ -1,17 +1,16 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <div>
+        <b-row><a :href="'/api/v1/file/'+this.$store.state.username+'_project.docx'" download>Download</a></b-row>
         <div v-if="this.$store.state.user_control===0">
             <b-row>
                 <b-col sm="4">
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">Upload</span>
-                        </div>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="inputGroupFile01">
-                            <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
-                        </div>
-                    </div>
+                    <b-form-file
+                            v-model="file"
+                            :state="Boolean(file)"
+                            placeholder="Choose a file or drop it here..."
+                            drop-placeholder="Drop file here..."
+                            accept=".doc, .docx"
+                    ></b-form-file>
                 </b-col>
             </b-row>
             <div ref="student_table_show" v-if="!student_date">
@@ -115,6 +114,8 @@
                 },
             ],
             student_history: [],
+            file: null,
+            return_file: null
         }),
         methods: {
             remove() {
@@ -194,7 +195,7 @@
                     .catch(e => {
                         this.$snotify.error(`Error status ${e.response.status}`);
                     });
-            }
+            },
         },
         beforeCreate() {
             if (this.$store.state.username && this.$store.state.user_control === 0) {
@@ -243,7 +244,30 @@
             if (this.$store.state.user_control === 0) {
                 this.get_history();
             }
+        },
+        watch: {
+            file: function (val, oldVal) {
+                if (this.file) {
+                    let formData = new FormData();
+                    formData.append('student', this.$store.state.username);
+                    formData.append('file', this.file);
+                    this.$api.post("/file", formData)
+                        .then((data) => {
+                            this.$snotify.success("Файл загружен!")
+                            //todo
+                            // if (data.data) {
+                            //     this.$snotify.success("Файл загружен!")
+                            // } else {
+                            //     this.$snotify.warning("Файл поврежден!")
+                            // }
+                        })
+                    // .catch(e => {
+                    //     this.$snotify.error(`Error status ${e.response.status}`);
+                    // });
+                }
+            }
         }
+
     }
 </script>
 

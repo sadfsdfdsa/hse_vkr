@@ -1,10 +1,12 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 from db import Database
 
 app = Flask(__name__,
             static_url_path='',
             static_folder='static',
             template_folder='static')
+
+app.config['UPLOAD_FOLDER'] = '/upload/'
 
 db = Database("db.db")
 db.create_tables()
@@ -130,6 +132,21 @@ def set_failed():
     return jsonify({"success": "false"})
 
 
+@app.route('/api/v1/file/', methods=['POST'])
+def upload_file():
+    file = request.files['file']
+    student_id = db.User.get(fio=request.form.get('student'))['id']
+    if db.File.save(file, student_id):
+        return jsonify({"success": "true"})
+    return jsonify({"success": "false"})
+
+
+@app.route('/api/v1/file/<string:student_fio>_project.docx', methods=['GET'])
+def get_file(student_fio):
+    student_id = db.User.get(fio=student_fio)['id']
+    return send_from_directory('upload', '{0}_student.docx'.format(student_id))
+
+
 # dev
 @app.route('/api/v1/dev/unset_control', methods=['GET'])
 def dev_control_0():
@@ -151,7 +168,7 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
-    app.run(threaded=False)
+    app.run()
 
 # https://hse-exams.herokuapp.com/
 # https://github.com/sadfsdfdsa/hse_vkr

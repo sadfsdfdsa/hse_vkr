@@ -2,6 +2,8 @@
     <div>
         <b-container>
             <b-row>{{student_fio}}</b-row>
+            <b-row><a :href="'/api/v1/file/'+student_fio+'_project.docx'" download>Download</a></b-row>
+
             <b-table ref="errors_table" striped hover :items="student_history" :fields="fields">
                 <template v-slot:cell(del)="item">
                     <b-button variant="success" class="btn-sm" @click="remove_item(item)">Ошибка исправлена</b-button>
@@ -129,21 +131,25 @@
                 }
             },
             end_check() {
-                this.$api.post("/time/teacher", {
-                    teacher: this.$store.state.username,
-                    student: this.student_fio,
-                    action: 'end'
-                })
-                    .then((data) => {
-                        if (data.data.result) {
-                            this.$router.push('/account')
-                        } else {
-                            this.$snotify.error(data.data.error)
-                        }
+                if (this.student_history.length !== 0) {
+                    this.$api.post("/time/teacher", {
+                        teacher: this.$store.state.username,
+                        student: this.student_fio,
+                        action: 'end'
                     })
-                    .catch(e => {
-                        this.$snotify.error(`Error status ${e.response.status}`);
-                    });
+                        .then((data) => {
+                            if (data.data.result) {
+                                this.$router.push('/account')
+                            } else {
+                                this.$snotify.error(data.data.error)
+                            }
+                        })
+                        .catch(e => {
+                            this.$snotify.error(`Error status ${e.response.status}`);
+                        });
+                }else{
+                    this.$snotify.warning('Ошибок нет!')
+                }
             },
             passed_control() {
                 if (this.student_history.length === 0) {

@@ -1,4 +1,6 @@
 from db_init import *
+from werkzeug.utils import secure_filename
+import os
 
 
 class User:
@@ -208,6 +210,28 @@ class File:
     def __init__(self, cursor, conn):
         self.cursor = cursor
         self.conn = conn
+        self.UPLOAD_FOLDER = 'D:/work/pycharm_projects/kursach/upload/'
+        self.ALLOWED_EXTENSIONS = set(['docx', 'doc'])
+
+    def allowed_file(self, filename):
+        return '.' in filename and \
+               filename.rsplit('.', 1)[1] in self.ALLOWED_EXTENSIONS
+
+    def save(self, file, student_id):
+        if file and self.allowed_file(file.filename):
+            filename = str(student_id) + '_student.' + file.filename.rsplit('.', 1)[1]
+            file.save(os.path.join(self.UPLOAD_FOLDER, filename))
+            return True
+        return False
+
+    def get(self, student_id):
+        try:
+            f = open("/upload/" + str(student_id) + '_student.docx')
+            return f
+        except IOError:
+            print("File not accessible")
+        finally:
+            f.close()
 
 
 class Database:
