@@ -58,8 +58,11 @@
                 </b-table>
             </b-row>
         </div>
-        <div v-else>
+        <div v-else-if="this.$store.state.user_control===1">
             <b-row>Passed</b-row>
+        </div>
+        <div v-else>
+            <b-row>Failed</b-row>
         </div>
     </div>
 </template>

@@ -23,8 +23,12 @@
                 </b-col>
             </b-row>
             <b-row class="mt-3">
-                <b-col>
+                <b-col v-if="student_history_length_old===0">
                     <b-button class="btn-lg" @click="end_check()">Отправить на повторный</b-button>
+                </b-col>
+                <b-col v-else>
+                    <b-button class="btn-lg" variant="warning" @click="failed_control()">Нормоконтроль не пройден
+                    </b-button>
                 </b-col>
                 <b-col>
                     <b-button class="btn-lg" variant="success" @click="passed_control()">Успешно прошел нормоконтроль
@@ -56,6 +60,7 @@
             ],
             options: ['error one', 'error 2', 'error 3'],
             student_history: [],
+            student_history_length_old: 0,
             student_fio: null,
             error_text: '',
             comment_text: '',
@@ -67,6 +72,7 @@
                     .then((data) => {
                         if (data.data) {
                             this.student_history = data.data;
+                            this.student_history_length_old = this.student_history.length;
                         } else {
                             this.$snotify.info("Не забудьте сделать запись!")
                         }
@@ -140,7 +146,7 @@
                     });
             },
             passed_control() {
-                if (this.student_history.length===0) {
+                if (this.student_history.length === 0) {
                     this.$api.post("/student/passed", {
                         student: this.student_fio
                     })
@@ -150,9 +156,20 @@
                         .catch(e => {
                             this.$snotify.error(`Error status ${e.response.status}`);
                         });
-                }else{
+                } else {
                     this.$snotify.warning('В работе еще есть ошибки!')
                 }
+            },
+            failed_control() {
+                this.$api.post("/student/failed", {
+                    student: this.student_fio
+                })
+                    .then((data) => {
+                        this.end_check()
+                    })
+                    .catch(e => {
+                        this.$snotify.error(`Error status ${e.response.status}`);
+                    });
             }
         },
         created: function () {

@@ -121,6 +121,16 @@ def set_passed():
     return jsonify({"success": "false"})
 
 
+@app.route('/api/v1/student/failed', methods=['POST'])
+def set_failed():
+    student_fio = request.json['student']
+    student_id = db.User.get(fio=student_fio)['id']
+    if db.User.set(student_id, 2):
+        return jsonify({"success": "true"})
+    return jsonify({"success": "false"})
+
+
+# dev
 @app.route('/api/v1/dev/unset_control', methods=['GET'])
 def dev_control_0():
     db.cursor.execute("UPDATE users SET control = 0")
