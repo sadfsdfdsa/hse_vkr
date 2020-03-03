@@ -1,11 +1,10 @@
 <template>
     <div id="main">
-        <b-container>
+        <b-container class="mt-5">
             <div class="wrapper fadeInDown">
-                <div id="formContent">
-                    <!-- Tabs Titles -->
-                    <!-- Login Form -->
-                    <form>
+                <div id="formContent" class="mt-5">
+                    <div></div>
+                    <form class="mt-5">
                         <input type="text" v-model="login" id="login" class="fadeIn second" name="login"
                                placeholder="login">
                         <input type="text" v-model="password" id="password" class="fadeIn third" name="password"
@@ -36,7 +35,14 @@
                     this.$api.post("/login", {login: this.login, password: this.password})
                         .then((data) => {
                             if (!data.data.error) {
-                                this.$store.commit("set_user", {name: data.data.fio, role: data.data.role, control: data.data.control});
+                                this.$store.commit("set_user", {
+                                    name: data.data.fio,
+                                    role: data.data.role,
+                                    control: data.data.control
+                                });
+                                localStorage.login = this.login;
+                                localStorage.password = this.password;
+                                localStorage.name = data.data.fio;
                                 this.$router.push({path: '/account'});
                             } else {
                                 this.$snotify.error(data.data.error)
@@ -50,6 +56,29 @@
                 }
             }
         },
+        created() {
+            if (localStorage.getItem('login')) {
+                this.$api.post("/login", {
+                    login: localStorage.getItem('login'),
+                    password: localStorage.getItem('password')
+                })
+                    .then((data) => {
+                        if (!data.data.error) {
+                            this.$store.commit("set_user", {
+                                name: data.data.fio,
+                                role: data.data.role,
+                                control: data.data.control
+                            });
+                            this.$router.push({path: '/account'});
+                        } else {
+                            this.$snotify.error(data.data.error)
+                        }
+                    })
+                    .catch(e => {
+                        this.$snotify.error(`Error status ${e.response.status}`);
+                    });
+            }
+        }
 
     }
 </script>

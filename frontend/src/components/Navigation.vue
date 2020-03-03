@@ -1,27 +1,47 @@
 <template>
     <div>
-        <b-navbar toggleable="lg" type="dark" variant="primary">
+        <b-navbar toggleable="lg" type="dark" variant="dark">
             <b-navbar-brand href="#">HSE Exams</b-navbar-brand>
-
-            <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
-            <div v-if="this.$store.state.username!==''">
-                <b-collapse id="nav-collapse" is-nav>
-                    <b-navbar-nav>
-                        <b-nav-item :to="{name: 'indexPage'}">Home</b-nav-item>
-                    </b-navbar-nav>
-                    <b-navbar-nav>
-                        <b-nav-item :to="{name: 'indexPage'}">Exit</b-nav-item>
-                    </b-navbar-nav>
-                </b-collapse>
-            </div>
+            <b-navbar-nav>
+                <div v-if="this.username">
+                    <div class="ml-5 text-light"><strong>Username:</strong> {{this.username}}
+                    </div>
+                    <div class="ml-5 text-light"><strong>Role:</strong>
+                        {{this.roles_dict[this.user_role]}}
+                        <b-button @click="exit()">Sign out</b-button>
+                    </div>
+                </div>
+            </b-navbar-nav>
         </b-navbar>
     </div>
 </template>
 
 
 <script>
+    import {mapState} from 'vuex';
+
     export default {
-        name: "Navigation"
+        name: "Navigation",
+        data: () => ({
+            roles_dict: [
+                'student', 'teacher'
+            ]
+        }),
+        methods: {
+            exit() {
+                this.$store.commit("set_user", {
+                    name: null,
+                    role: 0,
+                    control: null
+                });
+                localStorage.removeItem('login');
+                localStorage.removeItem('password');
+                this.$router.push({path: '/'});
+            }
+        },
+        computed: mapState([
+            'username', 'user_role'
+        ])
     }
 </script>
 

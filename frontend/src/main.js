@@ -26,8 +26,9 @@ Vue.prototype.$api = api;
 
 const store = new Vuex.Store({
     state: {
-        username: '',
-        user_role: 0
+        username: null,
+        user_role: 0,
+        user_control: false,
     },
     mutations: {
         set_user(state, user) {

@@ -1,11 +1,6 @@
 <template>
     <div>
         <b-container>
-            <b-row>
-                <b-col>Username:</b-col>
-                <b-col>{{this.username}}</b-col>
-                <b-col>{{this.role[this.user_role]}}</b-col>
-            </b-row>
             <div v-if="this.user_role===1">
                 <teacher_template></teacher_template>
             </div>

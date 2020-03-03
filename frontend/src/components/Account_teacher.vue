@@ -5,17 +5,17 @@
         </b-row>
         <b-row>
             <b-col sm="7">
-                <date-picker v-model="date" format="YYYY-MM-DD" lang="en" confirm></date-picker>
+                <date-picker v-model="date" format="YYYY-MM-DD" lang="en"></date-picker>
                 <date-picker v-model="begin_time" lang="en" type="time"
                              format="HH:mm" :minute-step="10" placeholder="Start"
                              :time-picker-options="{ start: '08:10', step: '00:20', end: '19:30' }"
-                             confirm>
+                >
                 </date-picker>
 
                 <date-picker v-model="end_time" lang="en" type="time"
                              format="HH:mm" :minute-step="10" placeholder="End"
                              :time-picker-options="{ start: this.begin_time.getHours()+':'+(this.begin_time.getMinutes()+20),
-                             step: '00:20', end: '19:30' }" confirm>
+                             step: '00:20', end: '19:30' }">
                 </date-picker>
             </b-col>
             <b-col>
@@ -28,7 +28,7 @@
                 <b-row>
                     <b-table ref="dates_table_teacher" striped hover :items="dates" :fields="fields">
                         <template v-slot:cell(date)="item">
-                            {{item.item.date.getDay()+'.'+item.item.date.getMonth()+'.'+item.item.date.getFullYear()}}
+                            {{item.item.begin.getDate()+'.'+item.item.begin.getMonth()+'.'+item.item.begin.getFullYear()}}
                         </template>
                         <template v-slot:cell(begin)="item">
                             {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
@@ -49,7 +49,7 @@
                 <b-row>
                     <b-table ref="dates_table_teacher" striped hover :items="check_dates" :fields="fields2">
                         <template v-slot:cell(date)="item">
-                            {{item.item.date.getDay()+'.'+item.item.date.getMonth()+'.'+item.item.date.getFullYear()}}
+                            {{item.item.begin.getDate()+'.'+item.item.begin.getMonth()+'.'+item.item.begin.getFullYear()}}
                         </template>
                         <template v-slot:cell(begin)="item">
                             {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
@@ -140,9 +140,17 @@
                         begin: this.begin_time,
                         end: this.end_time
                     };
+
+                    tmp.begin.setFullYear(tmp.date.getFullYear());
+                    tmp.begin.setMonth(tmp.date.getMonth()+1);
+                    tmp.begin.setDate(tmp.date.getDate());
+
+                    tmp.end.setFullYear(tmp.date.getFullYear());
+                    tmp.end.setMonth(tmp.date.getMonth()+1);
+                    tmp.end.setDate(tmp.date.getDate());
+
                     this.$api.post("/time/teacher", {
                         date: {
-                            date: this.date.getTime(),
                             begin: this.begin_time.getTime(),
                             end: this.end_time.getTime()
                         }, teacher: this.$store.state.username, action: 'create'
@@ -188,13 +196,13 @@
 
             },
             go_check(item) {
-                this.$router.push({path: '/work/'+item.item.student});
+                this.$router.push({path: '/work/' + item.item.student});
             }
         },
         created: function () {
             let dates = [];
             let check_dates = [];
-            this.$api.get('/time/teacher?teacher=' + this.$store.state.username)
+            this.$api.get('/time/teacher/?teacher=' + this.$store.state.username)
                 .then((data) => {
                     data.data.dates.forEach(function (item) {
                         if (item.student) {

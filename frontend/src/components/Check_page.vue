@@ -131,15 +131,17 @@
                 }
             },
             end_check() {
-                if (this.student_history.length !== 0) {
+                if (this.student_history.length !== 0 || this.student_history_length_old === 0) {
                     this.$api.post("/time/teacher", {
-                        teacher: this.$store.state.username,
+                        teacher: localStorage.getItem('name'),
                         student: this.student_fio,
                         action: 'end'
                     })
                         .then((data) => {
                             if (data.data.result) {
-                                this.$router.push('/account')
+                                this.$router.push('/account');
+                                this.$snotify.info('Success!')
+
                             } else {
                                 this.$snotify.error(data.data.error)
                             }
@@ -147,7 +149,7 @@
                         .catch(e => {
                             this.$snotify.error(`Error status ${e.response.status}`);
                         });
-                }else{
+                } else {
                     this.$snotify.warning('Ошибок нет!')
                 }
             },

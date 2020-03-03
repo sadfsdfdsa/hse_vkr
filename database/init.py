@@ -1,15 +1,15 @@
 table_time = """
 CREATE TABLE "time" (
-	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
-	"time_begin"	INTEGER,
-	"time_end"	INTEGER,
+	"id"	SERIAL,
+	"time_begin"	BIGINT,
+	"time_end"	BIGINT,
 	"teacher_id"	INTEGER,
 	"student_id"	INTEGER
 )
 """
 table_user = """
 CREATE TABLE "users" (
-	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
+	"id"	SERIAL,
 	"fio"	TEXT,
 	"role"	INTEGER,
 	"email"	TEXT UNIQUE,
@@ -19,11 +19,11 @@ CREATE TABLE "users" (
 """
 
 table_check = """
-CREATE TABLE "check" (
-	"id"	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+CREATE TABLE "check_table" (
+	"id"	SERIAL,
 	"student_id"	INTEGER,
 	"error"	TEXT,
 	"comment"	TEXT,
-	"date"	INTEGER
+	"date"	BIGINT
 )
 """

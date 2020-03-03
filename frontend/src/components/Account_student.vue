@@ -22,7 +22,7 @@
                                 {{item.item.teacher}}
                             </template>
                             <template v-slot:cell(date)="item">
-                                {{item.item.date.getDay()+'.'+item.item.date.getMonth()+'.'+item.item.date.getFullYear()}}
+                                {{item.item.begin.getDate()+'.'+item.item.begin.getMonth()+'.'+item.item.begin.getFullYear()}}
                             </template>
                             <template v-slot:cell(begin)="item">
                                 {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
@@ -42,7 +42,7 @@
                 <b-row>{{student_date.teacher}}</b-row>
                 <b-row>
                     <b-col>
-                        {{student_date.date.getDay()+'.'+student_date.date.getMonth()+'.'+student_date.date.getFullYear()}}
+                        {{student_date.begin.getDate()+'.'+student_date.begin.getMonth()+'.'+student_date.begin.getFullYear()}}
                     </b-col>
                     <b-col>
                         {{student_date.begin.getHours()}}:{{student_date.begin.getMinutes()}}-{{student_date.end.getHours()}}:{{student_date.end.getMinutes()}}
@@ -143,13 +143,13 @@
                         if (!data.data.error) {
                             data.data.forEach(function (item) {
                                 dates.push({
-                                    date: new Date(item.date),
                                     begin: new Date(item.begin),
                                     end: new Date(item.end),
                                     teacher: item.teacher
                                 })
                             });
                             this.free_dates = dates;
+                            console.log(dates)
                         }
                     })
                     .catch(e => {
@@ -184,7 +184,7 @@
                 });
             },
             get_history() {
-                this.$api.get("/check?student=" + this.$store.state.username)
+                this.$api.get("/check/?student=" + this.$store.state.username)
                     .then((data) => {
                         if (data.data) {
                             this.student_history = data.data;
@@ -197,11 +197,10 @@
                     });
             },
         },
-        beforeCreate() {
+        created() {
             if (this.$store.state.username && this.$store.state.user_control === 0) {
                 let dates = [];
-                let flag = false;
-                this.$api.get("/time/student?student=" + this.$store.state.username)
+                this.$api.get("/time/student/?student=" + this.$store.state.username)
                     .then((data) => {
                         if (data.data.result === "success") {
                             this.student_date = {
@@ -210,39 +209,32 @@
                                 end: new Date(data.data.date.end),
                                 teacher: data.data.date.teacher
                             };
-                            flag = true;
-
                         } else {
-                            this.$snotify.info("Не забудьте сделать запись!")
+                            this.$snotify.info("Не забудьте сделать запись!");
+                            this.$api.get("/time/free/")
+                                .then((data) => {
+                                    if (!data.data.error) {
+                                        data.data.forEach(function (item) {
+                                            dates.push({
+                                                date: new Date(item.date),
+                                                begin: new Date(item.begin),
+                                                end: new Date(item.end),
+                                                teacher: item.teacher
+                                            })
+                                        });
+                                        this.free_dates = dates;
+                                    }
+                                })
+                                .catch(e => {
+                                    this.$snotify.error(`Error status ${e.response.status}`);
+                                });
                         }
                     })
                     .catch(e => {
                         this.$snotify.error(`Error status ${e.response.status}`);
-                    });
-                if (!flag) {
-                    this.$api.get("/time/free")
-                        .then((data) => {
-                            if (!data.data.error) {
-                                data.data.forEach(function (item) {
-                                    dates.push({
-                                        date: new Date(item.date),
-                                        begin: new Date(item.begin),
-                                        end: new Date(item.end),
-                                        teacher: item.teacher
-                                    })
-                                });
-                                this.free_dates = dates;
-                            }
-                        })
-                        .catch(e => {
-                            this.$snotify.error(`Error status ${e.response.status}`);
-                        });
-                }
-            }
-        },
-        created() {
-            if (this.$store.state.user_control === 0) {
-                this.get_history();
+                    }).then(() => {
+                    this.get_history();
+                })
             }
         },
         watch: {
