@@ -158,7 +158,7 @@
                         .then((data) => {
                             if (data.data.result === "success") {
                                 this.dates.push(tmp);
-                                this.$snotify.success(data.data.result)
+                                this.$snotify.success('Время добавлено!')
                             } else {
                                 this.$snotify.error(data.data.error)
                             }

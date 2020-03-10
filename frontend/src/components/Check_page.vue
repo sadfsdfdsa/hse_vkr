@@ -70,7 +70,7 @@
         }),
         methods: {
             get_history() {
-                this.$api.get("/check?student=" + this.student_fio)
+                this.$api.get("/check/?student=" + this.student_fio)
                     .then((data) => {
                         if (data.data) {
                             this.student_history = data.data;

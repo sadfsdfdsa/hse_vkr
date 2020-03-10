@@ -1,67 +1,109 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <div>
-        <b-row><a :href="'/api/v1/file/'+this.$store.state.username+'_project.docx'" download>Download</a></b-row>
+        <b-row>
+            <b-col><h3>Скачать файл: <a :href="'/api/v1/file/'+this.$store.state.username+'_project.docx'"
+                                        download>download</a></h3>
+            </b-col>
+        </b-row>
         <div v-if="this.$store.state.user_control===0">
-            <b-row>
-                <b-col sm="4">
+            <b-row class="mt-2">
+                <b-col sm="6">
                     <b-form-file
                             v-model="file"
                             :state="Boolean(file)"
-                            placeholder="Choose a file or drop it here..."
+                            placeholder="Выберите или перетащите сюда новый файл..."
                             drop-placeholder="Drop file here..."
                             accept=".doc, .docx"
                     ></b-form-file>
                 </b-col>
             </b-row>
-            <div ref="student_table_show" v-if="!student_date">
-                <b-col sm="6">
-                    <b-row>Свободное время преподавателей</b-row>
-                    <b-row>
-                        <b-table ref="dates_table_student" striped hover :items="free_dates" :fields="fields">
-                            <template v-slot:cell(teacher)="item">
-                                {{item.item.teacher}}
-                            </template>
-                            <template v-slot:cell(date)="item">
-                                {{item.item.begin.getDate()+'.'+item.item.begin.getMonth()+'.'+item.item.begin.getFullYear()}}
-                            </template>
-                            <template v-slot:cell(begin)="item">
-                                {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
-                            </template>
-                            <template v-slot:cell(end)="item">
-                                {{item.item.end.getHours()}}:{{item.item.end.getMinutes()}}
-                            </template>
-                            <template v-slot:cell(confirm)="item">
-                                <b-button class="btn-sm" @click="add(item.item)">+</b-button>
-                            </template>
-                        </b-table>
-                    </b-row>
-                </b-col>
-            </div>
-            <div v-else>
-                <b-row>Ваш нормоконтроль:</b-row>
-                <b-row>{{student_date.teacher}}</b-row>
-                <b-row>
-                    <b-col>
-                        {{student_date.begin.getDate()+'.'+student_date.begin.getMonth()+'.'+student_date.begin.getFullYear()}}
-                    </b-col>
-                    <b-col>
-                        {{student_date.begin.getHours()}}:{{student_date.begin.getMinutes()}}-{{student_date.end.getHours()}}:{{student_date.end.getMinutes()}}
-                    </b-col>
-                </b-row>
-                <b-row>
-                    <b-button class="btn-sm" @click="remove()">Delete (test)</b-button>
-                </b-row>
-            </div>
             <b-row>
+                <b-col sm="6" class="text-sm-center"><em>Предыдущий файл сотрется!</em></b-col>
+            </b-row>
+            <div v-if="loader_teacher_date" class="text-center">
+                <b-spinner variant="primary" label="Spinning"></b-spinner>
+            </div>
+            <div ref="student_table_show" v-if="!student_date">
+                <b-row class="mt-2">
+                    <b-col v-if="free_dates.length>0 || loader_teacher_date" sm="6">
+                        <b-row>
+                            <b-col><h5>Свободное время преподавателей</h5></b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                <b-table ref="dates_table_student" striped hover :items="free_dates" :fields="fields">
+                                    <template v-slot:cell(teacher)="item">
+                                        {{item.item.teacher}}
+                                    </template>
+                                    <template v-slot:cell(date)="item">
+                                        {{item.item.begin.getDate()+'.'+item.item.begin.getMonth()+'.'+item.item.begin.getFullYear()}}
+                                    </template>
+                                    <template v-slot:cell(begin)="item">
+                                        {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
+                                    </template>
+                                    <template v-slot:cell(end)="item">
+                                        {{item.item.end.getHours()}}:{{item.item.end.getMinutes()}}
+                                    </template>
+                                    <template v-slot:cell(confirm)="item">
+                                        <b-button class="btn-sm" @click="add(item.item)">+</b-button>
+                                    </template>
+                                </b-table>
+                            </b-col>
+                        </b-row>
+                    </b-col>
+                    <b-col v-else>
+                        <b-card title="К сожалению, нет доступного для записи времени..."
+                                class="mb-2 text-center"></b-card>
+                    </b-col>
+                </b-row>
+            </div>
+            <div v-else class="mt-2">
+                <b-card title="Ваша запись" style="max-width: 20rem;" class="mb-2">
+                    <b-card-text>
+                        <b-row>
+                            <b-col>Teacher:</b-col>
+                            <b-col>{{student_date.teacher}}</b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>Date:</b-col>
+                            <b-col>
+                                {{student_date.begin.getDate()+'.'+student_date.begin.getMonth()+'.'+student_date.begin.getFullYear()}}
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>Time:</b-col>
+                            <b-col>
+                                {{student_date.begin.getHours()}}:{{student_date.begin.getMinutes()}}-{{student_date.end.getHours()}}:{{student_date.end.getMinutes()}}
+                            </b-col>
+                        </b-row>
+                    </b-card-text>
+                    <b-button class="btn-sm" @click="remove()">Отменить</b-button>
+
+                </b-card>
+            </div>
+            <b-row class="mt-2" v-if="this.student_history.length>0">
                 <b-table ref="errors_table" striped hover :items="student_history" :fields="fields2">
                 </b-table>
             </b-row>
+            <b-row v-else>
+                <b-col>
+                    <b-card title="Ошибок нет" class="mb-2 text-center"></b-card>
+                </b-col>
+            </b-row>
         </div>
         <div v-else-if="this.$store.state.user_control===1">
-            <b-row>Passed</b-row>
+            <b-row>
+                <b-col>
+                    <b-card title="Нормоконтроль пройден" class="mb-2 text-center"></b-card>
+                </b-col>
+            </b-row>
         </div>
         <div v-else>
-            <b-row>Failed</b-row>
+            <b-row>
+                <b-col>
+                    <b-card title="Нормоконтроль не пройден" class="mb-2 text-center"></b-card>
+                </b-col>
+            </b-row>
         </div>
     </div>
 </template>
@@ -100,6 +142,7 @@
                     sortable: false
                 },
             ],
+            loader_teacher_date: true,
             free_dates: [],
             student_date: null,
             fields2: [
@@ -130,8 +173,9 @@
                     action: 'delete'
                 }).then((data) => {
                     if (data.data.result === 'success') {
-                        this.$snotify.success("success");
-                        this.student_date = null
+                        this.$snotify.success("Время отменено!");
+                        this.student_date = null;
+                        this.loader_teacher_date = true
                     } else {
                         this.$snotify.error("error")
                     }
@@ -149,7 +193,8 @@
                                 })
                             });
                             this.free_dates = dates;
-                            console.log(dates)
+                            this.loader_teacher_date = false;
+
                         }
                     })
                     .catch(e => {
@@ -169,7 +214,7 @@
                 })
                     .then((data) => {
                         if (data.data.result === 'success') {
-                            this.$snotify.success("success");
+                            this.$snotify.success("Время зарезервировано!");
                             this.student_date = {
                                 date: item.date,
                                 begin: item.begin,
@@ -224,11 +269,15 @@
                                         });
                                         this.free_dates = dates;
                                     }
+                                    this.loader_teacher_date = false;
+
                                 })
                                 .catch(e => {
                                     this.$snotify.error(`Error status ${e.response.status}`);
                                 });
                         }
+                        this.loader_teacher_date = false;
+
                     })
                     .catch(e => {
                         this.$snotify.error(`Error status ${e.response.status}`);
