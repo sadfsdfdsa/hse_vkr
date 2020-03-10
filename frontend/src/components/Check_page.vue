@@ -1,20 +1,36 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <div>
         <b-container>
-            <b-row>{{student_fio}}</b-row>
-            <b-row><a :href="'/api/v1/file/'+student_fio+'_project.docx'" download>Download</a></b-row>
-
-            <b-table ref="errors_table" striped hover :items="student_history" :fields="fields">
-                <template v-slot:cell(del)="item">
-                    <b-button variant="success" class="btn-sm" @click="remove_item(item)">Ошибка исправлена</b-button>
-                </template>
-            </b-table>
+            <b-row class="mt-2">
+                <b-col><h4>Student:
+                    {{student_fio}}</h4>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col>
+                    <h4>Скачать файл:
+                        <a :href="'/api/v1/file/'+student_fio+'_project.docx'" download>Download</a>
+                    </h4>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col>
+                    <b-table ref="errors_table" striped hover :items="student_history" :fields="fields">
+                        <template v-slot:cell(del)="item">
+                            <b-button variant="success" class="btn-sm" @click="remove_item(item)">Ошибка исправлена
+                            </b-button>
+                        </template>
+                    </b-table>
+                </b-col>
+            </b-row>
             <b-row>
                 <b-col>
                     <b-row>
-                        <b-form-select v-model="error_text" :options="options">
-                        </b-form-select>
-                        <b-form-input v-model="error_text" placeholder="Ошибка"></b-form-input>
+                        <b-col>
+                            <b-form-select v-model="error_text" :options="options">
+                            </b-form-select>
+                            <b-form-input v-model="error_text" placeholder="Ошибка"></b-form-input>
+                        </b-col>
                     </b-row>
                 </b-col>
                 <b-col>
@@ -159,7 +175,8 @@
                         student: this.student_fio
                     })
                         .then((data) => {
-                            this.end_check()
+                            this.$snotify.info('Success!');
+                            this.$router.push('/account');
                         })
                         .catch(e => {
                             this.$snotify.error(`Error status ${e.response.status}`);

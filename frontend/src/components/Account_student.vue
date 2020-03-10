@@ -82,8 +82,10 @@
                 </b-card>
             </div>
             <b-row class="mt-2" v-if="this.student_history.length>0">
-                <b-table ref="errors_table" striped hover :items="student_history" :fields="fields2">
-                </b-table>
+                <b-col>
+                    <b-table ref="errors_table" striped hover :items="student_history" :fields="fields2">
+                    </b-table>
+                </b-col>
             </b-row>
             <b-row v-else>
                 <b-col>
