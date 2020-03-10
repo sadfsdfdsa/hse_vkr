@@ -1,5 +1,10 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <div>
+        <b-row class="mt-2">
+            <b-col>
+                <h5>Создайте свободные места для записи</h5>
+            </b-col>
+        </b-row>
         <b-row class="mt-2 justify-content-start">
             <b-col class="col-md-auto">
                 <div class="text-center">Выберите дату</div>
@@ -24,7 +29,7 @@
                 <b-button @click="add()" class="btn-md" variant="primary">Добавить время</b-button>
             </b-col>
         </b-row>
-        <b-row class="mt-2">
+        <b-row class="mt-3">
             <b-col sm="5">
                 <b-row>
                     <b-col><h5>Ваше свободное время</h5></b-col>
@@ -33,7 +38,7 @@
                     <b-col>
                         <b-table ref="dates_table_teacher" striped hover :items="dates" :fields="fields">
                             <template v-slot:cell(date)="item">
-                                {{item.item.begin.getDate()+'.'+item.item.begin.getMonth()+'.'+item.item.begin.getFullYear()}}
+                                {{item.item.date.getDate()+'.'+item.item.date.getMonth()+'.'+item.item.date.getFullYear()}}
                             </template>
                             <template v-slot:cell(begin)="item">
                                 {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
@@ -47,7 +52,10 @@
                         </b-table>
                     </b-col>
                 </b-row>
-                <b-row v-if="dates.length===0" class="text-center">
+                <div v-if="loader_teacher_date" class="text-center">
+                    <b-spinner variant="primary" label="Spinning"></b-spinner>
+                </div>
+                <b-row v-if="dates.length===0 && !loader_teacher_date" class="text-center">
                     <b-col><h6>Добавьте дату</h6></b-col>
                 </b-row>
             </b-col>
@@ -78,7 +86,10 @@
                         </b-table>
                     </b-col>
                 </b-row>
-                <b-row v-if="check_dates.length===0" class="text-center">
+                <div v-if="loader_teacher_date" class="text-center">
+                    <b-spinner variant="primary" label="Spinning"></b-spinner>
+                </div>
+                <b-row v-if="check_dates.length===0 && !loader_teacher_date" class="text-center">
                     <b-col><h6>Записей нет</h6></b-col>
                 </b-row>
             </b-col>
@@ -146,7 +157,8 @@
             begin_time: new Date(11400000),
             end_time: new Date(12600000),
             dates: [],
-            check_dates: []
+            check_dates: [],
+            loader_teacher_date: true,
         }),
         methods: {
             add() {
@@ -159,12 +171,14 @@
                         end: this.end_time
                     };
 
+                    tmp.date.setMonth(tmp.date.getMonth() + 1);
+
                     tmp.begin.setFullYear(tmp.date.getFullYear());
-                    tmp.begin.setMonth(tmp.date.getMonth() + 1);
+                    tmp.begin.setMonth(tmp.date.getMonth());
                     tmp.begin.setDate(tmp.date.getDate());
 
                     tmp.end.setFullYear(tmp.date.getFullYear());
-                    tmp.end.setMonth(tmp.date.getMonth() + 1);
+                    tmp.end.setMonth(tmp.date.getMonth());
                     tmp.end.setDate(tmp.date.getDate());
 
                     this.$api.post("/time/teacher", {
@@ -187,6 +201,9 @@
                 } else {
                     this.$snotify.warning(`Время окончения должно быть больше времени начала`);
                 }
+                this.date = new Date();
+                this.begin_time = new Date(11400000);
+                this.end_time = new Date(12600000)
             },
             remove(item) {
                 this.$api.post("/time/teacher", {
@@ -218,29 +235,29 @@
             }
         },
         created: function () {
-            let dates = [];
-            let check_dates = [];
+
             this.$api.get('/time/teacher/?teacher=' + this.$store.state.username)
                 .then((data) => {
-                    data.data.dates.forEach(function (item) {
+                    for (let i = 0; i < data.data.dates.length; i++) {
+                        let item = data.data.dates[i];
                         if (item.student) {
-                            check_dates.push({
+                            this.check_dates.push({
                                 date: new Date(item.date),
                                 begin: new Date(item.begin),
                                 end: new Date(item.end),
                                 student: item.student
                             })
                         } else {
-                            dates.push({
+                            this.dates.push({
                                 date: new Date(item.date),
                                 begin: new Date(item.begin),
                                 end: new Date(item.end)
                             })
+
                         }
-                    });
+                    }
+                    this.loader_teacher_date = false;
                 });
-            this.check_dates = check_dates;
-            this.dates = dates;
         }
     }
 </script>

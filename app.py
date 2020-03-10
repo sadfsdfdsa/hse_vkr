@@ -9,6 +9,8 @@ app = Flask(__name__,
 app.config.from_object(Config)
 
 db = Database("db.db")
+
+
 # db.create_tables()
 
 

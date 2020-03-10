@@ -13,31 +13,64 @@
                     </h4>
                 </b-col>
             </b-row>
-            <b-row>
+            <b-row v-if="student_history.length>0 || student_history_length_old!==0">
                 <b-col>
-                    <b-table ref="errors_table" striped hover :items="student_history" :fields="fields">
-                        <template v-slot:cell(del)="item">
-                            <b-button variant="success" class="btn-sm" @click="remove_item(item)">Ошибка исправлена
+                    <b-row>
+                        <b-col>
+                            <b-table ref="errors_table" striped hover :items="student_history" :fields="fields">
+                                <template v-slot:cell(del)="item">
+                                    <b-button variant="success" class="btn-sm" @click="remove_item(item)">Ошибка
+                                        исправлена
+                                    </b-button>
+                                </template>
+                            </b-table>
+                        </b-col>
+                    </b-row>
+                    <b-row>
+                        <b-col>
+                            <b-button class="btn-lg" variant="warning" @click="failed_control()">Нормоконтроль не
+                                пройден
                             </b-button>
+                        </b-col>
+                        <b-col>
+                            <b-button class="btn-lg" variant="success" @click="passed_control()">Успешно прошел
+                                нормоконтроль
+                            </b-button>
+                        </b-col>
+                    </b-row>
+                </b-col>
+            </b-row>
+            <b-row class="mt-2">
+                <b-col>
+                    <b-table ref="dates_table_teacher" striped hover :items="default_errors" :fields="fields2">
+                        <template v-slot:cell(button)="item">
+                            <b-form-checkbox
+                                    v-model="status"
+                                    :value="item.item.text"
+                                    size="lg" stacked>
+                            </b-form-checkbox>
+                        </template>
+                        <template v-slot:cell(error)="item">
+                            {{item.item.text}}
+                        </template>
+                        <template v-slot:cell(comment)="item">
+                            <b-form-input :v-model="default_errors[default_errors.indexOf(item.item)].comment"
+                                          placeholder="Комментарий"></b-form-input>
                         </template>
                     </b-table>
                 </b-col>
             </b-row>
             <b-row>
                 <b-col>
-                    <b-row>
-                        <b-col>
-                            <b-form-select v-model="error_text" :options="options">
-                            </b-form-select>
-                            <b-form-input v-model="error_text" placeholder="Ошибка"></b-form-input>
-                        </b-col>
-                    </b-row>
+
+                    <b-form-input v-model="error_text" placeholder="Ошибка"></b-form-input>
+
                 </b-col>
                 <b-col>
                     <b-form-input v-model="comment_text" placeholder="Комментарий"></b-form-input>
                 </b-col>
                 <b-col>
-                    <b-button class="btn-sm" @click="add_item(item)">Добавить ошибку</b-button>
+                    <b-button class="btn-md" @click="add_item(item)">Добавить ошибку</b-button>
                 </b-col>
             </b-row>
             <b-row class="mt-3">
@@ -76,7 +109,77 @@
                     label: '',
                 },
             ],
-            options: ['error one', 'error 2', 'error 3'],
+            fields2: [
+                {
+                    key: 'button',
+                    label: 'Ошибка',
+                },
+                {
+                    key: 'error',
+                    label: 'Текст ошибки',
+                },
+                {
+                    key: 'comment',
+                    label: 'Комментарий',
+                },
+
+            ],
+            status: [],
+            default_errors: [
+                {
+                    text: '4.0 Ошибка оформления листа',
+                    comment: ''
+                },
+                {
+                    text: '4.0 Ошибка нумерации страниц',
+                    comment: ''
+                },
+                {
+                    text: '4.0 Ошибка шрифтов',
+                    comment: ''
+                },
+                {
+                    text: '4.0 Ошибка абзацного членения',
+                    comment: ''
+                },
+                {
+                    text: '4.0 Отсутствует список терминов',
+                    comment: ''
+                },
+                {
+                    text: '4.0 Присутствуют неприменимые обороты',
+                    comment: ''
+                },
+                {
+                    text: '4.0 Ошибка наименивания команд и тд',
+                    comment: ''
+                }, {
+                    text: '4.1 Смысловая ошибка в заголовках',
+                    comment: ''
+                },
+                {
+                    text: '4.1 Ошибка структуры разделов',
+                    comment: ''
+                }, {
+                    text: '4.2 Ошибка оформления списков',
+                    comment: ''
+                }, {
+                    text: '4.3 Ошибка оформления таблиц',
+                    comment: ''
+                }, {
+                    text: '4.4 Ошибка оформления формул',
+                    comment: ''
+                }, {
+                    text: '4.5 Ошибка оформления иллюстраций',
+                    comment: ''
+                }, {
+                    text: '4.6 Ошибка оформления библиографического списка',
+                    comment: ''
+                }, {
+                    text: '4.7 Ошибка оформления приложений',
+                    comment: ''
+                },
+            ],
             student_history: [],
             student_history_length_old: 0,
             student_fio: null,
@@ -123,31 +226,34 @@
             },
             add_item() {
                 if (this.error_text) {
-                    this.$api.post("/check", {
-                        action: 'add',
-                        student: this.student_fio,
-                        data: {
-                            'error': this.error_text,
-                            'comment': this.comment_text
-                        }
-                    })
-                        .then((data) => {
-                            if (data.data.success === 'true') {
-                                this.student_history.push({'error': this.error_text, 'comment': this.comment_text});
-                                this.$refs.errors_table.refresh();
-                                this.error_text = '';
-                                this.comment_text = ''
-                            } else {
-                                this.$snotify.error(data.data.error)
-                            }
-                        })
-                        .catch(e => {
-                            this.$snotify.error(`Error status ${e.response.status}`);
-                        });
+                    this.default_errors.push({
+                        text: this.error_text,
+                        comment: this.comment_text
+                    });
+                    this.status.push(this.error_text);
+                    this.error_text = '';
+                    this.comment_text = ''
                 }
             },
             end_check() {
                 if (this.student_history.length !== 0 || this.student_history_length_old === 0) {
+                    this.status.forEach(item => {
+                        let tmp = '';
+                        for (let sub_item in this.default_errors.values()) {
+                            if (sub_item.text === item) {
+                                tmp = sub_item.comment;
+                                break;
+                            }
+                        }
+                        this.$api.post("/check", {
+                            action: 'add',
+                            student: this.student_fio,
+                            data: {
+                                'error': item,
+                                'comment': tmp
+                            }
+                        })
+                    });
                     this.$api.post("/time/teacher", {
                         teacher: localStorage.getItem('name'),
                         student: this.student_fio,
@@ -170,13 +276,28 @@
                 }
             },
             passed_control() {
-                if (this.student_history.length === 0) {
+                if (this.student_history.length === 0 && this.status.length === 0) {
                     this.$api.post("/student/passed", {
                         student: this.student_fio
                     })
-                        .then((data) => {
-                            this.$snotify.info('Success!');
-                            this.$router.push('/account');
+                        .then(() => {
+                            this.$api.post("/time/teacher", {
+                                teacher: localStorage.getItem('name'),
+                                student: this.student_fio,
+                                action: 'end'
+                            })
+                                .then((data) => {
+                                    if (data.data.result) {
+                                        this.$router.push('/account');
+                                        this.$snotify.info('Success!')
+
+                                    } else {
+                                        this.$snotify.error(data.data.error)
+                                    }
+                                })
+                                .catch(e => {
+                                    this.$snotify.error(`Error status ${e.response.status}`);
+                                });
                         })
                         .catch(e => {
                             this.$snotify.error(`Error status ${e.response.status}`);
@@ -189,7 +310,7 @@
                 this.$api.post("/student/failed", {
                     student: this.student_fio
                 })
-                    .then((data) => {
+                    .then(() => {
                         this.end_check()
                     })
                     .catch(e => {
@@ -200,7 +321,7 @@
         created: function () {
             this.student_fio = this.$route.params.student_fio;
             this.get_history();
-        }
+        },
     }
 </script>
 
