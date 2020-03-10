@@ -61,7 +61,7 @@
                     <b-col>
                         <b-table ref="dates_table_teacher" striped hover :items="check_dates" :fields="fields2">
                             <template v-slot:cell(date)="item">
-                                {{item.item.begin.getDate()+'.'+item.item.begin.getMonth()+'.'+item.item.begin.getFullYear()}}
+                                {{item.item.date.getDate()+'.'+item.item.date.getMonth()+'.'+item.item.date.getFullYear()}}
                             </template>
                             <template v-slot:cell(begin)="item">
                                 {{item.item.begin.getHours()}}:{{item.item.begin.getMinutes()}}
@@ -150,8 +150,10 @@
         }),
         methods: {
             add() {
+                let tmp;
                 if (this.begin_time < this.end_time) {
-                    let tmp = {
+                    tmp = null;
+                    tmp = {
                         date: this.date,
                         begin: this.begin_time,
                         end: this.end_time
@@ -176,7 +178,7 @@
                                 this.dates.push(tmp);
                                 this.$snotify.success('Время добавлено!')
                             } else {
-                                this.$snotify.error(data.data.error)
+                                this.$snotify.error('Это время уже занято')
                             }
                         })
                         .catch(e => {

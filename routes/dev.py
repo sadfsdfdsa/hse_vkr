@@ -9,4 +9,6 @@ def dev_control_0():
     db.conn.commit()
     db.cursor.execute("DELETE FROM check_table")
     db.conn.commit()
+    db.cursor.execute("DELETE FROM time")
+    db.conn.commit()
     return jsonify({"success": "true"})

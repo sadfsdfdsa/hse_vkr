@@ -164,6 +164,7 @@
         }),
         methods: {
             remove() {
+                this.loader_teacher_date = true;
                 this.$api.post("/time/student", {
                     date: {
                         date: this.student_date.date.getTime(),
@@ -177,7 +178,7 @@
                     if (data.data.result === 'success') {
                         this.$snotify.success("Время отменено!");
                         this.student_date = null;
-                        this.loader_teacher_date = true
+                        this.loader_teacher_date = false
                     } else {
                         this.$snotify.error("error")
                     }
@@ -201,6 +202,7 @@
                     .catch(e => {
                         this.$snotify.error(`Error status ${e.response.status}`);
                     });
+                this.loader_teacher_date = false
             },
             add(item) {
                 this.$api.post("/time/student", {
