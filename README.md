@@ -1,13 +1,4 @@
-# Flask + Vue.js open template
+# HSE EXAMS APP
 
-Установка 
-```cd frontend```
-```npm install```
+Site: `https://hse-exams.herokuapp.com/`
 
-Запуск ```npm run serve```
-
-Сборка проекта ```npm run build```
-
-
-Сборка подготовлена для деплоя на heroku.
-Добавьте /frontend к гитигнору при деплое!

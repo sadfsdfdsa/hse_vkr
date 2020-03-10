@@ -194,7 +194,6 @@
                             });
                             this.free_dates = dates;
                             this.loader_teacher_date = false;
-
                         }
                     })
                     .catch(e => {
@@ -308,7 +307,6 @@
                 }
             }
         }
-
     }
 </script>
 
