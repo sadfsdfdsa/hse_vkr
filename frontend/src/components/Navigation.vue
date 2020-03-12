@@ -61,13 +61,23 @@
                 localStorage.login = 'sh@mail.ru';
                 localStorage.password = '123';
                 localStorage.name = 'A K Shuvaev';
-                this.$router.push({path: '/'});
+                if (this.$route.path === '/') {
+                    this.$router.push({path: '/account'});
+
+                } else {
+                    this.$router.push({path: '/'});
+                }
             },
             login_student() {
                 localStorage.login = 'nv@mail.ru';
                 localStorage.password = '123';
                 localStorage.name = 'V I Novikov';
-                this.$router.push({path: '/'});
+                if (this.$route.path === '/') {
+                    this.$router.push({path: '/account'});
+
+                } else {
+                    this.$router.push({path: '/'});
+                }
             },
             reset_control() {
                 this.$api.get("/dev/unset_control")
