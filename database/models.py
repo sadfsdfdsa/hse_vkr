@@ -227,15 +227,18 @@ class Check:
 
     def delete(self, student_id, error=None, date=0):
         with self.conn.cursor() as cursor:
-            cursor.execute("DELETE FROM check_table WHERE student_id={0} AND error='{1}'".format(student_id, error))
+            if error is not None:
+                cursor.execute("DELETE FROM check_table WHERE student_id={0} AND error='{1}'".format(student_id, error))
+                self.conn.commit()
+            cursor.execute("DELETE FROM check_table WHERE student_id={0}".format(student_id))
             self.conn.commit()
             return True
 
     def serialize(self, one=None, many=None):
         if one is not None:
-            tmp_user = User(self.conn)
-            return {'student': tmp_user.get(id=one[1])['fio'], 'error': one[2], 'comment': one[3], 'date': one[4]}
-            # return {'error': one[2], 'comment': one[3], 'date': one[4]}
+            # tmp_user = User(self.conn)
+            # return {'student': tmp_user.get(id=one[1])['fio'], 'error': one[2], 'comment': one[3], 'date': one[4]}
+            return {'error': one[2], 'comment': one[3], 'isActive': True}
 
         elif many is not None:
             result = []

@@ -11,19 +11,22 @@ def get_check():
     return jsonify(db.Check.get(student_id=student['id']))
 
 
-@app.route('/api/v1/check', methods=["POST"])  # append/delete error in history by student fio, error msg
+@app.route('/api/v1/check', methods=["POST"])  # delete errors and then append new in history by student fio, error msg
 def post_check():
     student_fio = request.json['student']
     student_id = db.User.get(fio=student_fio)['id']
-    action = request.json['action']
+    db.Check.delete(student_id=student_id)
     tmp = request.json['data']
-    if action == 'add':
-        db.Check.create(student_id, tmp['error'], tmp['comment'])
-        return jsonify({"success": "true"})
-    elif action == 'remove':
-        db.Check.delete(student_id, tmp['error'])
-        return jsonify({"success": "true"})
-    return jsonify({"success": "false"})
+    for item in tmp:
+        db.Check.create(student_id, item['error'], item['comment'])
+    # action = request.json['action']
+    # if action == 'add':
+    #     db.Check.create(student_id, tmp['error'], tmp['comment'])
+    #     return jsonify({"success": "true"})
+    # elif action == 'remove':
+    #     db.Check.delete(student_id, tmp['error'])
+    #     return jsonify({"success": "true"})
+    return jsonify({"success": "true"})
 
 
 @app.route('/api/v1/student/passed', methods=['POST'])
