@@ -12,6 +12,19 @@ def all_time_get():
 # return free dates
 @app.route('/api/v1/time/free/', methods=["GET"])
 def free_time_get():
+    # student_fio = request.args.get('student')
+    # tmp = db.Time.get(teacher_id=0)
+    # teacher_fio = None
+    # for row in tmp:
+    #     if 'student' in row:
+    #         if row['student'] == student_fio:
+    #             teacher_fio = row['teacher']
+    #             break
+    # if teacher_fio is not None:
+    #     tmp = db.Time.get(teacher_id=db.User.get(fio=teacher_fio)['id'])
+    # else:
+    #     tmp = db.Time.get(student_id=0)
+
     tmp = db.Time.get(student_id=0)
     return jsonify(tmp)
 

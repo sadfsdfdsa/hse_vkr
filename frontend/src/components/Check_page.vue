@@ -8,13 +8,29 @@
             </b-row>
             <b-row>
                 <b-col>
-                    <h4>Скачать файл:
+                    <h4>
+                        <b-button pill variant="outline-primary"
+                                  v-b-popover.hover.top="'Если файл не открывается - значит он не  загружен на сервер.'">
+                            !
+                        </b-button>
+                        Скачать файл:
                         <a :href="'/api/v1/file/'+student_fio+'_project.docx'" download>Download</a>
                     </h4>
                 </b-col>
             </b-row>
             <b-row v-if="student_history.length>0 || student_history_length_old!==0">
                 <b-col>
+                    <b-row>
+                        <b-col>
+                            <h5 style="color: red">
+                                <b-button pill variant="outline-danger"
+                                          v-b-popover.hover.top="'Проверка начнется как-будто заново, но в последствии у студента второй возможности не будет!'">
+                                    !
+                                </b-button>
+                                Не перезагружайте страницу до завершения проверки!
+                            </h5>
+                        </b-col>
+                    </b-row>
                     <b-row>
                         <b-col>
                             <b-table ref="errors_table" striped hover :items="student_history" :fields="fields">
@@ -40,52 +56,54 @@
                     </b-row>
                 </b-col>
             </b-row>
-            <b-row class="mt-2">
-                <b-col>
-                    <b-table ref="dates_table_teacher" striped hover :items="default_errors" :fields="fields2">
-                        <template v-slot:cell(button)="item">
-                            <b-form-checkbox
-                                    v-model="status"
-                                    :value="item.item.text"
-                                    size="lg" stacked>
-                            </b-form-checkbox>
-                        </template>
-                        <template v-slot:cell(error)="item">
-                            {{item.item.text}}
-                        </template>
-                        <template v-slot:cell(comment)="item">
-                            <b-form-input :v-model="default_errors[default_errors.indexOf(item.item)].comment"
-                                          placeholder="Комментарий"></b-form-input>
-                        </template>
-                    </b-table>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col>
+            <div v-else>
+                <b-row class="mt-2">
+                    <b-col>
+                        <b-table ref="dates_table_teacher" striped hover :items="default_errors" :fields="fields2">
+                            <template v-slot:cell(button)="item">
+                                <b-form-checkbox
+                                        v-model="status"
+                                        :value="item.item.text"
+                                        size="lg" stacked>
+                                </b-form-checkbox>
+                            </template>
+                            <template v-slot:cell(error)="item">
+                                {{item.item.text}}
+                            </template>
+                            <template v-slot:cell(comment)="item">
+                                <b-form-input :v-model="default_errors[default_errors.indexOf(item.item)].comment"
+                                              placeholder="Комментарий"></b-form-input>
+                            </template>
+                        </b-table>
+                    </b-col>
+                </b-row>
+                <b-row>
+                    <b-col>
+                        <b-form-input v-model="error_text" placeholder="Ошибка"></b-form-input>
 
-                    <b-form-input v-model="error_text" placeholder="Ошибка"></b-form-input>
-
-                </b-col>
-                <b-col>
-                    <b-form-input v-model="comment_text" placeholder="Комментарий"></b-form-input>
-                </b-col>
-                <b-col>
-                    <b-button class="btn-md" @click="add_item(item)">Добавить ошибку</b-button>
-                </b-col>
-            </b-row>
-            <b-row class="mt-3">
-                <b-col v-if="student_history_length_old===0">
-                    <b-button class="btn-lg" @click="end_check()">Отправить на повторный</b-button>
-                </b-col>
-                <b-col v-else>
-                    <b-button class="btn-lg" variant="warning" @click="failed_control()">Нормоконтроль не пройден
-                    </b-button>
-                </b-col>
-                <b-col>
-                    <b-button class="btn-lg" variant="success" @click="passed_control()">Успешно прошел нормоконтроль
-                    </b-button>
-                </b-col>
-            </b-row>
+                    </b-col>
+                    <b-col>
+                        <b-form-input v-model="comment_text" placeholder="Комментарий"></b-form-input>
+                    </b-col>
+                    <b-col>
+                        <b-button class="btn-md" @click="add_item(item)">Добавить ошибку</b-button>
+                    </b-col>
+                </b-row>
+                <b-row class="mt-3">
+                    <b-col v-if="student_history_length_old===0">
+                        <b-button class="btn-lg" @click="end_check()">Отправить на повторный</b-button>
+                    </b-col>
+                    <b-col v-else>
+                        <b-button class="btn-lg" variant="warning" @click="failed_control()">Нормоконтроль не пройден
+                        </b-button>
+                    </b-col>
+                    <b-col>
+                        <b-button class="btn-lg" variant="success" @click="passed_control()">Успешно прошел
+                            нормоконтроль
+                        </b-button>
+                    </b-col>
+                </b-row>
+            </div>
         </b-container>
     </div>
 </template>
@@ -127,7 +145,7 @@
             status: [],
             default_errors: [
                 {
-                    text: '4.0 Ошибка оформления листа',
+                    text: '4.0 Ошибка оформления страниц (отступы и тд)',
                     comment: ''
                 },
                 {
@@ -135,7 +153,7 @@
                     comment: ''
                 },
                 {
-                    text: '4.0 Ошибка шрифтов',
+                    text: '4.0 Ошибка в использовании шрифтов',
                     comment: ''
                 },
                 {
@@ -185,7 +203,8 @@
             student_fio: null,
             error_text: '',
             comment_text: '',
-            item: null
+            item: null,
+            second_check_flag: null
         }),
         methods: {
             get_history() {
@@ -290,7 +309,6 @@
                                     if (data.data.result) {
                                         this.$router.push('/account');
                                         this.$snotify.info('Success!')
-
                                     } else {
                                         this.$snotify.error(data.data.error)
                                     }
@@ -311,6 +329,7 @@
                     student: this.student_fio
                 })
                     .then(() => {
+                        //todo
                         this.end_check()
                     })
                     .catch(e => {

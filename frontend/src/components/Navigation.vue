@@ -4,13 +4,23 @@
             <b-navbar-brand href="#">HSE Exams</b-navbar-brand>
             <b-navbar-nav class="ml-auto text-center">
                 <div>
-                    <b-button @click="login_teacher" variant="success">
-                        Teacher
+                    <b-button @click="login_teacher(0)" variant="success">
+                        Teacher1
                     </b-button>
                 </div>
                 <div class="ml-1">
-                    <b-button @click="login_student" variant="info">
-                        Student
+                    <b-button @click="login_teacher(1)" variant="success">
+                        Teacher2
+                    </b-button>
+                </div>
+                <div class="ml-1">
+                    <b-button @click="login_student(0)" variant="info">
+                        Student1
+                    </b-button>
+                </div>
+                <div class="ml-1">
+                    <b-button @click="login_student(1)" variant="info">
+                        Student2
                     </b-button>
                 </div>
                 <div class="ml-4">
@@ -57,10 +67,17 @@
             },
 
 
-            login_teacher() {
-                localStorage.login = 'sh@mail.ru';
-                localStorage.password = '123';
-                localStorage.name = 'A K Shuvaev';
+            login_teacher(second = 0) {
+                if (second === 0) {
+                    localStorage.login = 'sh@mail.ru';
+                    localStorage.password = '123';
+                    localStorage.name = 'A K Shuvaev';
+                } else {
+                    localStorage.login = 'va@mail.ru';
+                    localStorage.password = '123';
+                    localStorage.name = 'V A Kushev';
+                }
+
                 if (this.$route.path === '/') {
                     this.$router.push({path: '/account'});
 
@@ -68,10 +85,17 @@
                     this.$router.push({path: '/'});
                 }
             },
-            login_student() {
-                localStorage.login = 'nv@mail.ru';
-                localStorage.password = '123';
-                localStorage.name = 'V I Novikov';
+            login_student(second = 0) {
+                if (second === 0) {
+                    localStorage.login = 'nv@mail.ru';
+                    localStorage.password = '123';
+                    localStorage.name = 'V I Novikov';
+                } else {
+                    localStorage.login = 'kv@mail.ru';
+                    localStorage.password = '123';
+                    localStorage.name = 'K V Khlebalov';
+                }
+
                 if (this.$route.path === '/') {
                     this.$router.push({path: '/account'});
 

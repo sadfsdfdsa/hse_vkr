@@ -28,7 +28,9 @@ class User:
                 cursor.execute("DELETE FROM users WHERE email='" + str(email) + "'")
                 self.conn.commit()
                 return True
-            return False
+            cursor.execute("DELETE FROM users")
+            self.conn.commit()
+            return True
 
     def auth(self, email, password):
         with self.conn.cursor() as cursor:
@@ -41,7 +43,6 @@ class User:
 
     def get(self, id=None, email=None, fio=None):
         with self.conn.cursor() as cursor:
-
             if id is not None:
                 cursor.execute(str("SELECT * FROM users WHERE id=" + str(id)))
                 tmp = cursor.fetchall()
@@ -57,7 +58,6 @@ class User:
                 tmp = cursor.fetchall()
                 if len(tmp) == 1:
                     return self.serialize(tmp[0])
-            return False
 
     def set(self, id=None, control=0):
         with self.conn.cursor() as cursor:

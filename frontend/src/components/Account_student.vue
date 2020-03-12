@@ -1,8 +1,14 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <div>
-        <b-row>
-            <b-col><h3>Скачать файл: <a :href="'/api/v1/file/'+this.$store.state.username+'_project.docx'"
-                                        download>download</a></h3>
+        <b-row class="mt-2">
+            <b-col>
+                <h3>
+                    <b-button pill variant="outline-primary"
+                              v-b-popover.hover.top="'Если файл не открывается - значит он не  загружен на сервер.'">
+                        !
+                    </b-button>
+                    Скачать файл: <a :href="'/api/v1/file/'+this.$store.state.username+'_project.docx'"
+                                     download>download</a></h3>
             </b-col>
         </b-row>
         <div v-if="this.$store.state.user_control===0">
@@ -14,11 +20,12 @@
                             placeholder="Выберите или перетащите сюда новый файл..."
                             drop-placeholder="Drop file here..."
                             accept=".doc, .docx"
+                            v-b-popover.hover.top="'Вы можете загружать сколько угодно версий.'"
                     ></b-form-file>
                 </b-col>
             </b-row>
             <b-row>
-                <b-col sm="6" class="text-sm-center"><em>Предыдущий файл сотрется!</em></b-col>
+                <b-col sm="6" class="text-sm-center"><em>Предыдущий файл не сохранится!</em></b-col>
             </b-row>
             <div v-if="loader_teacher_date" class="text-center">
                 <b-spinner variant="primary" label="Spinning"></b-spinner>
@@ -89,7 +96,7 @@
             </b-row>
             <b-row v-else>
                 <b-col>
-                    <b-card title="Ошибок нет" class="mb-2 text-center"></b-card>
+                    <b-card title="Вы еще не прошли нормоконтроль" class="mb-2 text-center"></b-card>
                 </b-col>
             </b-row>
         </div>
@@ -185,7 +192,7 @@
                 }).catch(e => {
                     this.$snotify.error(`Error status ${e.response.status}`);
                 });
-                this.$api.get("/time/free")
+                this.$api.get("/time/free/?student=" + this.$store.state.username)
                     .then((data) => {
                         if (!data.data.error) {
                             data.data.forEach(function (item) {
@@ -259,7 +266,7 @@
                             };
                         } else {
                             this.$snotify.info("Не забудьте сделать запись!");
-                            this.$api.get("/time/free/")
+                            this.$api.get("/time/free/?student=" + this.$store.state.username)
                                 .then((data) => {
                                     if (!data.data.error) {
                                         data.data.forEach(function (item) {
